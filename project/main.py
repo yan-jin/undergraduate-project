@@ -1,16 +1,9 @@
-# This is a sample Python script.
+from preprocess_dataset import process_path
+from preprocess_dataset import combine_files
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+datasetRaw_path = '../datasetRaw'
+datasetProcessed_path = '../datasetProcessed'
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    process_path(datasetProcessed_path, datasetRaw_path)
+    combine_files(datasetProcessed_path, datasetProcessed_path)
