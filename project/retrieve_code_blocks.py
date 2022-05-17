@@ -52,19 +52,23 @@ def retrieve_code_blocks_with_entities(texts, entities):
     print('retrieve_code_blocks_with_entities')
     code_blocks = {}
     code_block_ids = {}
+    first_line = True
     for entity in entities:
         code_blocks[entity] = ""
-    for idx, line in tqdm(enumerate(texts)):
-        for entity in entities:
+    for entity in tqdm(entities):
+        for idx, line in enumerate(texts):
             regex = re.compile('\W{1}' + entity + '\W{1}')
             if len(regex.findall(line)) > 0:
-                code_block_ids[entity] = idx
-                code_blocks[entity] += line.strip() + " "
+                if first_line:
+                    code_block_ids[entity] = idx
+                    first_line = False
+                code_blocks[entity] += line.strip() + "\n"
+        first_line = True
     return code_blocks, code_block_ids
 
 
 def build_dataset():
-    lines = open('../datasetProcessed/dataset_small.txt').readlines()
+    lines = open('../datasetProcessed/dataset_full.txt').readlines()
     classes = generate_subclasses(lines)
     entities, entity_cls_infos = retrieve_entities_with_classes(lines, classes)
     blocks, ids = retrieve_code_blocks_with_entities(lines,
@@ -81,7 +85,8 @@ def build_dataset():
             tmp['entity_code_block'] = blocks[entity]
             tmp['entity_line_num'] = ids[entity]
             tmp['entity_class'] = entity_cls_infos[entity]
-            dataset['data']['entities'].append(tmp)
+            if 0 < len(tmp['entity_code_block']) < 1000:
+                dataset['data']['entities'].append(tmp)
         except:
             continue
     return dataset

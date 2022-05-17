@@ -1,6 +1,7 @@
 import os
 import shutil
 from tqdm import tqdm
+import json
 
 
 def is_target_file(filename):
@@ -36,3 +37,22 @@ def combine_files(root, output_path):
         os.mkdir(output_path)
     f = open(os.path.join(output_path, 'combined_data.txt'), 'w')
     f.writelines(data)
+
+
+def filter_dataset(path):
+    data = json.load(open(path, 'r'))
+    results = dict()
+    results['data'] = dict()
+    results['data']['subclasses'] = data['data']['subclasses']
+    results['data']['entities'] = list()
+    entities = data['data']['entities']
+    for entity in entities:
+        if 0 < len(entity['entity_code_block']) < 1000:
+            results['data']['entities'].append(entity)
+    json.dump(results, open('processed_data.json', 'w'))
+
+    return results
+
+
+if __name__ == '__main__':
+    data = filter_dataset('./data_small.json')
