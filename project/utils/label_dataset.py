@@ -69,5 +69,5 @@ def dataset_summary(path):
 
 
 if __name__ == '__main__':
-    label_dataset('./data.json', './data.json')
-    dataset_summary('./data.json')
+    label_dataset('../../datasetProcessed/data.json', './data.json')
+    dataset_summary('../../datasetProcessed/data.json')

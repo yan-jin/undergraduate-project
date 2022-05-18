@@ -55,4 +55,4 @@ def filter_dataset(path):
 
 
 if __name__ == '__main__':
-    data = filter_dataset('./data_small.json')
+    data = filter_dataset('../data_small.json')
