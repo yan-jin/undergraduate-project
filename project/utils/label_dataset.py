@@ -36,7 +36,7 @@ def label_dataset(path, output_path):
     for idx, entity in enumerate(entities):
         try:
             if 'label_type' in entity.keys():
-                continue
+                pass# continue
             print('\n')
             print(str(idx + 1) + ' in ' + str(len(entities)))
             print('[entity_name]: ' + str(entity['entity_name']) + '\n')
@@ -69,5 +69,5 @@ def dataset_summary(path):
 
 
 if __name__ == '__main__':
-    label_dataset('../../datasetProcessed/data.json', './data.json')
-    dataset_summary('../../datasetProcessed/data.json')
+    label_dataset('/Users/jinyan/Documents/YanJin/finalproject/project/sample_data.json', './sample_data.json')
+    dataset_summary('/Users/jinyan/Documents/YanJin/finalproject/project/sample_data.json')

@@ -20,14 +20,18 @@ class Seq2Seq(nn.Module):
         self.encoder = encoder
         self.config = config
         self.register_buffer("bias", torch.tril(torch.ones(2048, 2048)))
-        self.dense = nn.Linear(config.hidden_size, 17)
+        self.dense1 = nn.Linear(config.hidden_size, 512)
+        self.relu = nn.ReLU()
+        self.dense2 = nn.Linear(512, 17)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, source_ids=None, source_mask=None, source_labels=None):
         outputs = self.encoder(source_ids, attention_mask=source_mask)
         # encoder_output: (batch_size, hidden_size)
         encoder_output = outputs['pooler_output'].contiguous()
-        out = self.dense(encoder_output)
+        out = self.dense1(encoder_output)
+        out = self.relu(out)
+        out = self.dense2(out)
         out = self.softmax(out)
 
         if source_labels is not None:

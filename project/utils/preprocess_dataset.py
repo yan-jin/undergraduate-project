@@ -55,4 +55,6 @@ def filter_dataset(path):
 
 
 if __name__ == '__main__':
-    data = filter_dataset('../data_small.json')
+    path = '/Users/jinyan/Documents/YanJin/finalproject/Neverlate'
+    process_path(path, path)
+    combine_files(path, './')

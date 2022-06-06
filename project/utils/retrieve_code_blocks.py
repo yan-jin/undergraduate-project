@@ -68,7 +68,7 @@ def retrieve_code_blocks_with_entities(texts, entities):
 
 
 def build_dataset():
-    lines = open('../../datasetProcessed/dataset_full.txt').readlines()
+    lines = open('/Users/jinyan/Documents/YanJin/finalproject/project/combined_data.txt').readlines()
     classes = generate_subclasses(lines)
     entities, entity_cls_infos = retrieve_entities_with_classes(lines, classes)
     blocks, ids = retrieve_code_blocks_with_entities(lines,
@@ -94,5 +94,5 @@ def build_dataset():
 
 if __name__ == '__main__':
     dataset = build_dataset()
-    f = open('../../datasetProcessed/data.json', 'w')
+    f = open('./sample_data.json', 'w')
     json.dump(dataset, f)

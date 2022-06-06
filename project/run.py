@@ -114,11 +114,11 @@ if __name__ == '__main__':
     # Required parameters
     parser.add_argument("--model_type", default='roberta', type=str,
                         help="Model type: e.g. roberta")
-    parser.add_argument("--model_name_or_path", default='roberta-base', type=str,
+    parser.add_argument("--model_name_or_path", default='microsoft/codebert-base', type=str,
                         help="Path to pre-trained model: e.g. roberta-base")
     parser.add_argument("--output_dir", default='./outputs', type=str,
                         help="The output directory where the model predictions and checkpoints will be written.")
-    parser.add_argument("--load_model_path", default=None, type=str,
+    parser.add_argument("--load_model_path", default='./outputs/checkpoint-last/pytorch_model10000.bin', type=str,
                         help="Path to trained model: Should contain the .bin files")
     # Other parameters
     parser.add_argument("--train_filename", default='../datasetProcessed/data.json', type=str,
@@ -128,9 +128,9 @@ if __name__ == '__main__':
     parser.add_argument("--test_filename", default='../datasetProcessed/data.json', type=str,
                         help="The test filename. Should contain the .jsonl files for this task.")
 
-    parser.add_argument("--config_name", default="", type=str,
+    parser.add_argument("--config_name", default="microsoft/codebert-base", type=str,
                         help="Pretrained config name or path if not the same as model_name")
-    parser.add_argument("--tokenizer_name", default="", type=str,
+    parser.add_argument("--tokenizer_name", default="microsoft/codebert-base", type=str,
                         help="Pretrained tokenizer name or path if not the same as model_name")
     parser.add_argument("--max_source_length", default=64, type=int,
                         help="The maximum total source sequence length after tokenization. Sequences longer "
@@ -244,9 +244,11 @@ if __name__ == '__main__':
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ['bias', 'LayerNorm.weight']
         optimizer_grouped_parameters = [
-            {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+            {'params': [p for n, p in model.named_parameters() if
+                        (not any(nd in n for nd in no_decay) and 'encoder' not in n)],
              'weight_decay': args.weight_decay},
-            {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+            {'params': [p for n, p in model.named_parameters() if
+                        (any(nd in n for nd in no_decay)) and 'encoder' not in n], 'weight_decay': 0.0}
         ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
         scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=args.warmup_steps,
@@ -288,13 +290,38 @@ if __name__ == '__main__':
                 global_step += 1
                 eval_flag = True
 
-            if nb_tr_steps % 100 == 0:
+            if nb_tr_steps % 500 == 0:
                 # save last checkpoint
                 logger.info("***** Saving Checkpoint *****")
                 last_output_dir = os.path.join(args.output_dir, 'checkpoint-last')
                 if not os.path.exists(last_output_dir):
                     os.makedirs(last_output_dir)
-                    model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
-                    output_model_file = os.path.join(last_output_dir, "pytorch_model" + str(nb_tr_steps) + '.bin')
-                    torch.save(model_to_save.state_dict(), output_model_file)
+                model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+                output_model_file = os.path.join(last_output_dir, "pytorch_model" + str(nb_tr_steps) + '.bin')
+                torch.save(model_to_save.state_dict(), output_model_file)
+    else:
+        print("Testing...")
+        test_examples = read_examples(args.test_filename)
+        test_features = convert_examples_to_features(test_examples, tokenizer, args, stage='test')
+
+        from random import sample
+        test_features = sample(test_features, 100)
+
+        source_ids = torch.tensor([f.source_ids for f in test_features], dtype=torch.long).to(device)
+        source_mask = torch.tensor([f.source_mask for f in test_features], dtype=torch.long).to(device)
+        source_labels = torch.tensor([f.target_label for f in test_features], dtype=torch.long).to(device)
+
+        preds, loss = model(source_ids=source_ids, source_mask=source_mask, source_labels=source_labels)
+        preds = torch.argmax(preds, 1)
+        acc = (preds == source_labels).sum().item() / (preds.size()[0])
+        print('Accuracy: ' + str(acc))
+
+        id2label = json.load(open(args.test_filename, 'r'))['data']['id2label']
+        labels = []
+        for pred in preds:
+            labels.append(id2label[str(pred.item())])
+
+
+        pass
+
     pass
